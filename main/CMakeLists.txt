@@ -261,6 +261,59 @@ if(CONFIG_IDF_TARGET_ESP32)
                              )
 endif()
 
+file(GLOB IOT_SOURCES
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/json/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/log/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/util/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/object/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/mqtt/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/database/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/gateway/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/gateway/cloud/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/gateway/rpc/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/device/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/device/ble/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/device/ble/device/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/device/ble/module/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/group/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/scene/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/rule/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/rule/rule_input/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/rule/rule_output/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/protocol/ble/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/timer/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/ota/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/task/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/led/*.cpp"
+)
+list(APPEND SOURCES ${IOT_SOURCES})
+list(APPEND INCLUDE_DIRS
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/json"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/log"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/util"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/object"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/mqtt"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/database"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/gateway"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/gateway/cloud"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/gateway/rpc"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/device"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/device/ble"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/device/ble/device"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/device/ble/module"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/group"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/scene"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/rule"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/rule/rule_input"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/rule/rule_output"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/protocol/ble"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/timer"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/ota"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/task"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/led"
+)
+
 idf_component_register(SRCS ${SOURCES}
                     EMBED_FILES ${LANG_SOUNDS} ${COMMON_SOUNDS}
                     INCLUDE_DIRS ${INCLUDE_DIRS}
@@ -335,3 +388,4 @@ spiffs_create_partition_assets(
     MMAP_FILE_SUPPORT_FORMAT ".aaf"
 )
 endif()
+component_compile_options(-Wno-error=format= -Wno-format)
