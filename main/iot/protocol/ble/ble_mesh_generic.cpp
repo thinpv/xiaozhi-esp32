@@ -8,14 +8,15 @@
 #include "Log.h"
 #include "esp_timer.h"
 #include "DeviceManager.h"
+#include "DeviceBle.h"
 
 extern "C" void example_ble_mesh_generic_client_cb(esp_ble_mesh_generic_client_cb_event_t event,
 																									 esp_ble_mesh_generic_client_cb_param_t *param)
 {
-	esp_ble_mesh_client_common_param_t common = {0};
+	// esp_ble_mesh_client_common_param_t common = {0};
 	uint32_t opcode;
 	uint16_t addr;
-	int err;
+	// int err;
 
 	opcode = param->params->opcode;
 	addr = param->params->ctx.addr;

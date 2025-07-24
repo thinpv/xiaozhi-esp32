@@ -171,7 +171,7 @@ int BleProtocol::ResetDev(uint16_t devAddr)
 {
 	LOGD("Reset dev addr: 0x%04X", devAddr);
 	uint8_t dataRsp[100];
-	int lenRsp;
+	int lenRsp = 0;
 	typedef struct __attribute__((packed))
 	{
 		ble_message_header_t ble_message_header;
@@ -227,7 +227,7 @@ int BleProtocol::GetTTL(uint16_t devAddr)
 {
 	LOGD("GetTTL");
 	uint8_t dataRsp[100];
-	int lenRsp;
+	int lenRsp = 0;
 	typedef struct __attribute__((packed))
 	{
 		ble_message_header_t ble_message_header;
@@ -248,10 +248,17 @@ int BleProtocol::GetTTL(uint16_t devAddr)
 			uint16_t opcode;
 			uint8_t data[1];
 		} ttl_rsp_message_t;
-		ttl_rsp_message_t *ttl_rsp_message = (ttl_rsp_message_t *)dataRsp;
-		if (ttl_rsp_message->opcode == CFG_DEFAULT_TTL_STATUS)
+		if (lenRsp >= (int)sizeof(ttl_rsp_message_t))
 		{
-			return CODE_OK;
+			ttl_rsp_message_t *ttl_rsp_message = (ttl_rsp_message_t *)dataRsp;
+			if (ttl_rsp_message->opcode == CFG_DEFAULT_TTL_STATUS)
+			{
+				return CODE_OK;
+			}
+		}
+		else
+		{
+			LOGW("GetTTL: response too short (%d bytes)", lenRsp);
 		}
 	}
 	LOGW("Get TTL error");
@@ -369,49 +376,56 @@ int BleProtocol::SendOnlineCheck(uint16_t devAddr, uint32_t typeDev, uint16_t ve
 	return CODE_OK;
 }
 
-int BleProtocol::CallModeRgb(uint16_t devAddr, uint8_t modeRgb)
-{
-	LOGD("Call modeRgb: %d, addr: 0x%04X ", modeRgb, devAddr);
-	uint8_t dataRsp[100];
-	int lenRsp;
-	uint8_t modeRgbHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0x82, 0x52};
-	typedef struct __attribute__((packed))
-	{
-		ble_message_header_t ble_message_header;
-		uint16_t opcode;
-		uint16_t header;
-		uint8_t mode;
-	} modergb_message_t;
-	modergb_message_t modergb_message = {0};
-	memset(&modergb_message, 0x00, sizeof(modergb_message));
-	modergb_message.ble_message_header.devAddr = devAddr;
-	modergb_message.opcode = LIGHTNESS_LINEAR_SET;
-	modergb_message.header = HEADER_CALLMODE_RGB;
-	modergb_message.mode = modeRgb;
-	int rs = SendMessage(APP_REQ, (uint8_t *)&modergb_message, sizeof(modergb_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, modeRgbHeader, 0, 6);
-	if (rs == CODE_OK)
-	{
-		typedef struct __attribute__((packed))
-		{
-			uint16_t devAddr;
-			uint16_t gwAddr;
-			uint16_t opcode;
-			uint16_t header;
-			uint8_t mode;
-		} modergb_rsp_message_t;
-		modergb_rsp_message_t *modergb_rsp_message = (modergb_rsp_message_t *)dataRsp;
-		if (modergb_rsp_message->header == HEADER_CALLMODE_RGB)
-		{
-			if (modergb_rsp_message->mode == modeRgb)
-			{
-				return CODE_OK;
-			}
-			LOGW("call mode rgb resp state not match with input control");
-		}
-	}
-	LOGW("call mode rgb err");
-	return CODE_ERROR;
-}
+// int BleProtocol::CallModeRgb(uint16_t devAddr, uint8_t modeRgb)
+// {
+// 	LOGD("Call modeRgb: %d, addr: 0x%04X ", modeRgb, devAddr);
+// 	uint8_t dataRsp[100];
+// 	int lenRsp = 0;
+// 	uint8_t modeRgbHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0x82, 0x52};
+// 	typedef struct __attribute__((packed))
+// 	{
+// 		ble_message_header_t ble_message_header;
+// 		uint16_t opcode;
+// 		uint16_t header;
+// 		uint8_t mode;
+// 	} modergb_message_t;
+// 	modergb_message_t modergb_message = {0};
+// 	memset(&modergb_message, 0x00, sizeof(modergb_message));
+// 	modergb_message.ble_message_header.devAddr = devAddr;
+// 	modergb_message.opcode = LIGHTNESS_LINEAR_SET;
+// 	modergb_message.header = HEADER_CALLMODE_RGB;
+// 	modergb_message.mode = modeRgb;
+// 	int rs = SendMessage(APP_REQ, (uint8_t *)&modergb_message, sizeof(modergb_message_t), HCI_GATEWAY_RSP_OP_CODE, dataRsp, &lenRsp, 1000, modeRgbHeader, 0, 6);
+// 	if (rs == CODE_OK)
+// 	{
+// 		typedef struct __attribute__((packed))
+// 		{
+// 			uint16_t devAddr;
+// 			uint16_t gwAddr;
+// 			uint16_t opcode;
+// 			uint16_t header;
+// 			uint8_t mode;
+// 		} modergb_rsp_message_t;
+// 		if (lenRsp >= (int)sizeof(modergb_rsp_message_t))
+// 		{
+// 			modergb_rsp_message_t *modergb_rsp_message = (modergb_rsp_message_t *)dataRsp;
+// 			if (modergb_rsp_message->header == HEADER_CALLMODE_RGB)
+// 			{
+// 				if (modergb_rsp_message->mode == modeRgb)
+// 				{
+// 					return CODE_OK;
+// 				}
+// 				LOGW("call mode rgb resp state not match with input control");
+// 			}
+// 		}
+// 		else
+// 		{
+// 			LOGW("call mode rgb response too short (%d bytes)", lenRsp);
+// 		}
+// 	}
+// 	LOGW("call mode rgb err");
+// 	return CODE_ERROR;
+// }
 
 int BleProtocol::UpdateStatusSensorsPm(uint16_t devAddr)
 {
@@ -446,7 +460,7 @@ int BleProtocol::TimeActionPirLightSensor(uint16_t devAddr, uint16_t time)
 {
 	LOGD("TimeActionPirLightSensor 0x%04X", devAddr);
 	uint8_t dataRsp[100];
-	int lenRsp;
+	int lenRsp = 0;
 	uint8_t timeActionHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
@@ -478,12 +492,19 @@ int BleProtocol::TimeActionPirLightSensor(uint16_t devAddr, uint16_t time)
 			uint16_t header;
 			uint16_t time;
 		} time_action_rsp_message_t;
-		time_action_rsp_message_t *time_action_rsp_message = (time_action_rsp_message_t *)dataRsp;
-		if (time_action_rsp_message->header == RD_HEADER_CONFIG_SET_TIME_ACTION_PIR_LIGHT_SENSOR && time_action_rsp_message->time == time)
+		if (lenRsp >= (int)sizeof(time_action_rsp_message_t))
 		{
-			return CODE_OK;
+			time_action_rsp_message_t *time_action_rsp_message = (time_action_rsp_message_t *)dataRsp;
+			if (time_action_rsp_message->header == RD_HEADER_CONFIG_SET_TIME_ACTION_PIR_LIGHT_SENSOR && time_action_rsp_message->time == time)
+			{
+				return CODE_OK;
+			}
+			LOGW("time action pir light resp state not match with input control");
 		}
-		LOGW("time action pir light resp state not match with input control");
+		else
+		{
+			LOGW("time action pir light response too short (%d bytes)", lenRsp);
+		}
 	}
 	LOGW("time action pir light err");
 	return CODE_ERROR;
@@ -493,7 +514,7 @@ int BleProtocol::SetModeActionPirLightSensor(uint16_t devAddr, uint8_t mode)
 {
 	LOGD("ModeActionPirLightSensor 0x%04X", devAddr);
 	uint8_t dataRsp[100];
-	int lenRsp;
+	int lenRsp = 0;
 	uint8_t modeActionHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
@@ -526,12 +547,19 @@ int BleProtocol::SetModeActionPirLightSensor(uint16_t devAddr, uint8_t mode)
 			uint16_t header;
 			uint8_t mode;
 		} mode_action_rsp_message_t;
-		mode_action_rsp_message_t *mode_action_rsp_message = (mode_action_rsp_message_t *)dataRsp;
-		if (mode_action_rsp_message->header == RD_HEADER_CONFIG_SET_MODE_ACTION_PIR_LIGHT_SENSOR && mode_action_rsp_message->mode == mode)
+		if (lenRsp >= (int)sizeof(mode_action_rsp_message_t))
 		{
-			return CODE_OK;
+			mode_action_rsp_message_t *mode_action_rsp_message = (mode_action_rsp_message_t *)dataRsp;
+			if (mode_action_rsp_message->header == RD_HEADER_CONFIG_SET_MODE_ACTION_PIR_LIGHT_SENSOR && mode_action_rsp_message->mode == mode)
+			{
+				return CODE_OK;
+			}
+			LOGW("mode action pir light resp state not match with input control");
 		}
-		LOGW("mode action pir light resp state not match with input control");
+		else
+		{
+			LOGW("mode action pir light response too short (%d bytes)", lenRsp);
+		}
 	}
 	LOGW("mode action pir light err");
 	return CODE_ERROR;
@@ -541,7 +569,7 @@ int BleProtocol::SetSensiPirLightSensor(uint16_t devAddr, uint8_t sensi)
 {
 	LOGD("Set sensiPirLightSensor: 0x%04X, sensi: %d", devAddr, sensi);
 	uint8_t dataRsp[100];
-	int lenRsp;
+	int lenRsp = 0;
 	uint8_t sensiHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
@@ -575,7 +603,7 @@ int BleProtocol::SetDistanceSensor(uint16_t devAddr, uint8_t distance)
 {
 	LOGD("Set distance sensor: 0x%04X, distance: %d", devAddr, distance);
 	uint8_t dataRsp[100];
-	int lenRsp;
+	int lenRsp = 0;
 	uint8_t distanceHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
@@ -609,7 +637,7 @@ int BleProtocol::SetTimeRspSensor(uint16_t devAddr, uint16_t time)
 {
 	LOGD("Set time rsp sensor: 0x%04X, time: %d", devAddr, time);
 	uint8_t dataRsp[100];
-	int lenRsp;
+	int lenRsp = 0;
 	uint8_t timeRspHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
@@ -643,7 +671,7 @@ int BleProtocol::DelAllScene(uint16_t devAddr)
 {
 	LOGD("DelAllScene 0x%04x", devAddr);
 	uint8_t dataRsp[100];
-	int lenRsp;
+	int lenRsp = 0;
 	uint8_t delAllSceneScreenTouchHeader[] = {(uint8_t)(devAddr & 0xFF), (uint8_t)((devAddr >> 8) & 0xFF), 1, 0, 0xe3, 0x11, 0x02};
 	typedef struct __attribute__((packed))
 	{
@@ -677,12 +705,19 @@ int BleProtocol::DelAllScene(uint16_t devAddr)
 			uint16_t vendorId;
 			uint16_t header;
 		} scene_screen_touch_rsp_message_t;
-		scene_screen_touch_rsp_message_t *scene_screen_touch_rsp_message = (scene_screen_touch_rsp_message_t *)dataRsp;
-		if (scene_screen_touch_rsp_message->header == RD_HEADER_CONFIG_DEL_ALL_SCENE)
+		if (lenRsp >= (int)sizeof(scene_screen_touch_rsp_message_t))
 		{
-			return CODE_OK;
+			scene_screen_touch_rsp_message_t *scene_screen_touch_rsp_message = (scene_screen_touch_rsp_message_t *)dataRsp;
+			if (scene_screen_touch_rsp_message->header == RD_HEADER_CONFIG_DEL_ALL_SCENE)
+			{
+				return CODE_OK;
+			}
+			LOGW("del all scene screen touch resp state not match with input control");
 		}
-		LOGW("del all scene screen touch resp state not match with input control");
+		else
+		{
+			LOGW("del all scene screen touch response too short (%d bytes)", lenRsp);
+		}
 	}
 	LOGW("del all scene screen touch err");
 	return CODE_ERROR;

@@ -8,10 +8,7 @@
 #include "application.h"
 #include "system_info.h"
 
-#include "Database.h"
-#include "TimerSchedule.h"
-#include "BleProtocol.h"
-#include "Gateway.h"
+#include "iot.h"
 
 #define TAG "main"
 
@@ -30,18 +27,8 @@ extern "C" void app_main(void)
 	}
 	ESP_ERROR_CHECK(ret);
 
+	iot_main();
+
 	// Launch the application
 	Application::GetInstance().Start();
-
-	// Device *device;// = new Device();
-
-	int isCreateDb = Database::GetInstance()->init();
-	TimerSchedule::GetInstance()->init();
-	BleProtocol::GetInstance()->init();
-	Gateway::GetInstance()->init();
-	if (isCreateDb)
-	{
-		Gateway::GetInstance()->ResetFactory();
-	}
-	BleProtocol::GetInstance()->initKey(Gateway::GetInstance()->getBleNetKey(), Gateway::GetInstance()->getBleAppKey());
 }

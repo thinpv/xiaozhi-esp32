@@ -530,7 +530,7 @@ DeviceBle *DeviceManager::GetDeviceBleFromAddr(uint16_t addr)
 	{
 		if (device->CheckAddr(addr) && device->getProtocol() == BLE_DEVICE)
 		{
-			DeviceBle *deviceBle = dynamic_cast<DeviceBle *>(device);
+			DeviceBle *deviceBle = (DeviceBle *)device;
 			if (deviceBle)
 			{
 				deviceListMtx.unlock();
@@ -609,7 +609,7 @@ DeviceZigbee *DeviceManager::getDeviceZigbeeFromAddr(uint16_t addr)
 	{
 		if (device->CheckAddr(addr) && device->getProtocol() == ZIGBEE_DEVICE)
 		{
-			DeviceZigbee *deviceZigbee = dynamic_cast<DeviceZigbee *>(device);
+			DeviceZigbee *deviceZigbee = (DeviceZigbee *)device;
 			if (deviceZigbee)
 			{
 				deviceListMtx.unlock();

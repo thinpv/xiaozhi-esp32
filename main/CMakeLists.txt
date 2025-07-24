@@ -262,6 +262,7 @@ if(CONFIG_IDF_TARGET_ESP32)
 endif()
 
 file(GLOB IOT_SOURCES
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/*.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/iot/json/*.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/iot/log/*.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/iot/util/*.cpp"
@@ -281,9 +282,10 @@ file(GLOB IOT_SOURCES
 	"${CMAKE_CURRENT_SOURCE_DIR}/iot/rule/rule_input/*.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/iot/rule/rule_output/*.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/iot/protocol/ble/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/protocol/ble/*.c"
 	"${CMAKE_CURRENT_SOURCE_DIR}/iot/timer/*.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/iot/ota/*.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/iot/task/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/iot/task/*.c"
 	"${CMAKE_CURRENT_SOURCE_DIR}/iot/led/*.cpp"
 )
 list(APPEND SOURCES ${IOT_SOURCES})
@@ -389,3 +391,4 @@ spiffs_create_partition_assets(
 )
 endif()
 component_compile_options(-Wno-error=format= -Wno-format)
+component_compile_options(-Wno-maybe-uninitialized -Wno-unused-value)

@@ -42,6 +42,16 @@ Gateway *Gateway::GetInstance()
 		// 		config_data.server.password,
 		// 		config_data.server.keep_alive,
 		// 		config_data.server.tls);
+
+		gateway = new Gateway(
+				mac,
+				"34.126.108.182",
+				1883,
+				sClientId,
+				sClientId,
+				"",
+				10,
+				false);
 	}
 	return gateway;
 }

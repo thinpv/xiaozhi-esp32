@@ -1,8 +1,14 @@
 #include "Database.h"
 #include "Log.h"
 #include "Util.h"
+
 #ifdef ESP_PLATFORM
+// #define USE_LITTLEFS 1
+#ifdef USE_LITTLEFS
 #include "esp_littlefs.h"
+#else
+#include "esp_spiffs.h"
+#endif
 #endif
 #include <sys/stat.h>
 
@@ -34,18 +40,28 @@ int Database::init(void)
 	LOGI("Init db");
 	int isCreateDb = false;
 #ifdef ESP_PLATFORM
+#ifdef USE_LITTLEFS
 	LOGI("Initializing LITTLEFS");
-
 	esp_vfs_littlefs_conf_t conf = {
-			.base_path = "/storage",
-			.partition_label = "storage",
-			.format_if_mount_failed = true,
-			.dont_mount = false,
+#else
+	LOGI("Initializing SPIFFS");
+	esp_vfs_spiffs_conf_t conf = {
+#endif
+		.base_path = "/storage",
+		.partition_label = "storage",
+		.format_if_mount_failed = true,
+#ifdef USE_LITTLEFS
+		.dont_mount = false,
+#endif
 	};
 
 	// Use settings defined above to initialize and mount LITTLEFS filesystem.
 	// Note: esp_vfs_littlefs_register is an all-in-one convenience function.
+#ifdef USE_LITTLEFS
 	esp_err_t ret = esp_vfs_littlefs_register(&conf);
+#else
+	esp_err_t ret = esp_vfs_spiffs_register(&conf);
+#endif
 
 	if (ret != ESP_OK)
 	{
@@ -55,20 +71,38 @@ int Database::init(void)
 		}
 		else if (ret == ESP_ERR_NOT_FOUND)
 		{
-			LOGE("Failed to find LITTLEFS partition");
+			LOGE("Failed to find partition");
 		}
 		else
 		{
-			LOGE("Failed to initialize LITTLEFS (%s)", esp_err_to_name(ret));
+			LOGE("Failed to initialize fs (%s)", esp_err_to_name(ret));
 		}
 		return isCreateDb;
 	}
 
-	size_t total = 0, used = 0;
-	ret = esp_littlefs_info(conf.partition_label, &total, &used);
+#ifndef USE_LITTLEFS
+	LOGI("Performing SPIFFS_check().");
+	ret = esp_spiffs_check(conf.partition_label);
 	if (ret != ESP_OK)
 	{
-		LOGE("Failed to get LITTLEFS partition information (%s)", esp_err_to_name(ret));
+		LOGE("SPIFFS_check() failed (%s)", esp_err_to_name(ret));
+		return ret;
+	}
+	else
+	{
+		LOGI("SPIFFS_check() successful");
+	}
+#endif
+
+	size_t total = 0, used = 0;
+#ifdef USE_LITTLEFS
+	ret = esp_littlefs_info(conf.partition_label, &total, &used);
+#else
+	ret = esp_spiffs_info(conf.partition_label, &total, &used);
+#endif
+	if (ret != ESP_OK)
+	{
+		LOGE("Failed to get fs partition information (%s)", esp_err_to_name(ret));
 	}
 	else
 	{

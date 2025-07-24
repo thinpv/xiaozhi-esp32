@@ -492,4 +492,68 @@ choice I2S_TYPE_TAIJIPI_S3
         bool "I2S Type PDM"
 endchoice
 
+choice BOARD_TARGET
+    prompt "Choose Modem Board"
+    default BOARD_TARGET_IOTGW_V3
+
+    config BOARD_TARGET_HAAS506_ED1
+        bool "HAAS506_ED1"
+    config BOARD_TARGET_IOTGW_V1
+        bool "IOTGW_V1"
+    config BOARD_TARGET_IOTGW_V2
+        bool "IOTGW_V2"
+    config BOARD_TARGET_IOTGW_V3
+        bool "IOTGW_V3"
+    config BOARD_TARGET_MINIHUB_V1
+        bool "MiniHub V1"
+endchoice
+
+config IOTGW_ETH_ENABLED
+    bool "Enable Ethernet"
+    default y
+    help
+        Enable Ethernet
+
+config IOTGW_SIM_ENABLED
+    bool "Enable Sim"
+    default y
+    help
+        Enable Sim
+
+config ENABLE_ZIGBEE
+    bool "Enable Zigbee feature"
+    default n
+    help
+        Can connect to ZIGBEE devices
+
+config ENABLE_BLE
+    bool "Enable BLE feature"
+    default y
+    help
+        Can connect to BLE devices
+
+config ENABLE_MQTT
+    bool "Enable MQTT feature"
+    default n
+    help
+        Can connect to MQTT devices
+
+config ENABLE_IR
+    bool "Enable Ir feature"
+    default n
+    help
+        Can connect to Ir devices
+
+config ENABLE_MODBUS
+    bool "Enable MODBUS feature"
+    default n
+    help
+        Can connect to Modbus devices
+
+config ENABLE_BLE_FAST_SCAN
+    bool "Enable Ble fast scan feature"
+    default n
+    help
+        Can connect to ble fast scan devices
+
 endmenu

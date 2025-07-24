@@ -5,39 +5,31 @@
  *      Author: Thinpv
  */
 
-#ifndef LOG_H__
-#define LOG_H__
-
-#include "Define.h"
-
-#ifdef __ANDROID__
-
-#include <android/log.h>
-void logPrint(int priority, const char* tag, const char* format, ...);
-
-#define LOGV(...) ((void)logPrint(ANDROID_LOG_VERBOSE, "hc-core", __VA_ARGS__))
-#define LOGD(...) ((void)logPrint(ANDROID_LOG_DEBUG, "hc-core", __VA_ARGS__))
-#define LOGI(...) ((void)logPrint(ANDROID_LOG_INFO, "hc-core", __VA_ARGS__))
-#define LOGW(...) ((void)logPrint(ANDROID_LOG_WARN, "hc-core", __VA_ARGS__))
-#define LOGE(...) ((void)logPrint(ANDROID_LOG_ERROR, "hc-core", __VA_ARGS__))
-
-#else
+#ifndef __XLOG_H__
+#define __XLOG_H__
 
 #include <stdint.h>
 #include <stdarg.h>
 #include <time.h>
+
+#define bswap_16(X) __bswap_16(X)
+#define bswap_32(X) __bswap_32(X)
+
+// #ifndef TAG
+// #define TAG "thinpv"
+// #endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef enum {
-	LOG_NONE, /*!< No log output */
-	LOG_ERROR, /*!< Critical errors, software module can not recover on its own */
-	LOG_WARN, /*!< Error conditions from which recovery measures have been taken */
-	LOG_INFO, /*!< Information messages which describe normal flow of events */
-	LOG_DEBUG, /*!< Extra information which is not necessary for normal use (values, pointers, sizes, etc). */
-	LOG_VERBOSE /*!< Bigger chunks of debugging information, or frequent messages which can potentially flood the output. */
+	XLOG_NONE, /*!< No log output */
+	XLOG_ERROR, /*!< Critical errors, software module can not recover on its own */
+	XLOG_WARN, /*!< Error conditions from which recovery measures have been taken */
+	XLOG_INFO, /*!< Information messages which describe normal flow of events */
+	XLOG_DEBUG, /*!< Extra information which is not necessary for normal use (values, pointers, sizes, etc). */
+	XLOG_VERBOSE /*!< Bigger chunks of debugging information, or frequent messages which can potentially flood the output. */
 } log_level_t;
 
 extern log_level_t log_level;
@@ -54,60 +46,53 @@ void log_write(const char* format, ...) __attribute__ ((format (printf, 1, 2)));
 
 char* log_cut_str(char* full_path, uint8_t len);
 
-#define CONFIG_LOG_COLORS 1
+#define CONFIG_XLOG_COLORS 1
 
-#define TAG_DEFAULT		  "smh"
+#define TAG_DEFAULT		  "Thin"
 
-#if CONFIG_LOG_COLORS
-#define LOG_COLOR_BLACK   "30"
-#define LOG_COLOR_RED     "31"
-#define LOG_COLOR_GREEN   "32"
-#define LOG_COLOR_BROWN   "33"
-#define LOG_COLOR_BLUE    "34"
-#define LOG_COLOR_PURPLE  "35"
-#define LOG_COLOR_CYAN    "36"
-#define LOG_COLOR(COLOR)  "\033[0;" COLOR "m"
-#define LOG_BOLD(COLOR)   "\033[1;" COLOR "m"
-#define LOG_RESET_COLOR   "\033[0m"
-#define LOG_COLOR_E       LOG_COLOR(LOG_COLOR_RED)
-#define LOG_COLOR_W       LOG_COLOR(LOG_COLOR_BROWN)
-#define LOG_COLOR_I       LOG_COLOR(LOG_COLOR_GREEN)
-#define LOG_COLOR_D       LOG_COLOR(LOG_COLOR_BLUE)
-#define LOG_COLOR_V
-#else //CONFIG_LOG_COLORS
-#define LOG_COLOR_E
-#define LOG_COLOR_W
-#define LOG_COLOR_I
-#define LOG_COLOR_D
-#define LOG_COLOR_V
-#define LOG_RESET_COLOR
-#endif //CONFIG_LOG_COLORS
+#if CONFIG_XLOG_COLORS
+#define XLOG_COLOR_BLACK   "30"
+#define XLOG_COLOR_RED     "31"
+#define XLOG_COLOR_GREEN   "32"
+#define XLOG_COLOR_BROWN   "33"
+#define XLOG_COLOR_BLUE    "34"
+#define XLOG_COLOR_PURPLE  "35"
+#define XLOG_COLOR_CYAN    "36"
+#define XLOG_COLOR(COLOR)  "\033[0;" COLOR "m"
+#define XLOG_BOLD(COLOR)   "\033[1;" COLOR "m"
+#define XLOG_RESET_COLOR   "\033[0m"
+#define XLOG_COLOR_E       XLOG_COLOR(XLOG_COLOR_RED)
+#define XLOG_COLOR_W       XLOG_COLOR(XLOG_COLOR_BROWN)
+#define XLOG_COLOR_I       XLOG_COLOR(XLOG_COLOR_GREEN)
+#define XLOG_COLOR_D       XLOG_COLOR(XLOG_COLOR_BLUE)
+#define XLOG_COLOR_V
+#else //CONFIG_XLOG_COLORS
+#define XLOG_COLOR_E
+#define XLOG_COLOR_W
+#define XLOG_COLOR_I
+#define XLOG_COLOR_D
+#define XLOG_COLOR_V
+#define XLOG_RESET_COLOR
+#endif //CONFIG_XLOG_COLORS
 
 #define FUNC_NAME_LEN	10
 #define FILE_NAME_LEN	20
 
-#define LOG_FORMAT(letter, format)  LOG_COLOR_ ## letter #letter " (%s)(%10s)(..%12s)(%4d): " format LOG_RESET_COLOR "\n"
+#define XLOG_FORMAT(letter, format)  XLOG_COLOR_ ## letter #letter " (%s)(%10s)(..%12s)(%4d): " format XLOG_RESET_COLOR "\n"
 
-#ifndef CONFIG_LOG_DEFAULT_LEVEL
-#define CONFIG_LOG_DEFAULT_LEVEL LOG_INFO
+#define XLOG_DEFAULT_LEVEL XLOG_INFO
+#ifndef XLOG_LOCAL_LEVEL
+#define XLOG_LOCAL_LEVEL  ((log_level_t) XLOG_DEFAULT_LEVEL)
 #endif
 
-#ifndef LOG_LOCAL_LEVEL
-#define LOG_LOCAL_LEVEL  (CONFIG_LOG_DEFAULT_LEVEL)
-#endif
-
-#define LOGE( format, ... )  if (log_level >= LOG_ERROR)   { log_write(LOG_FORMAT(E, format), timestr(), log_cut_str((char*)__FUNCTION__, FUNC_NAME_LEN), log_cut_str((char*)__FILE__, FILE_NAME_LEN), __LINE__, ##__VA_ARGS__); }
-#define LOGW( format, ... )  if (log_level >= LOG_WARN)    { log_write(LOG_FORMAT(W, format), timestr(), log_cut_str((char*)__FUNCTION__, FUNC_NAME_LEN), log_cut_str((char*)__FILE__, FILE_NAME_LEN), __LINE__, ##__VA_ARGS__); }
-#define LOGI( format, ... )  if (log_level >= LOG_INFO)    { log_write(LOG_FORMAT(I, format), timestr(), log_cut_str((char*)__FUNCTION__, FUNC_NAME_LEN), log_cut_str((char*)__FILE__, FILE_NAME_LEN), __LINE__, ##__VA_ARGS__); }
-#define LOGD( format, ... )  if (log_level >= LOG_DEBUG)   { log_write(LOG_FORMAT(D, format), timestr(), log_cut_str((char*)__FUNCTION__, FUNC_NAME_LEN), log_cut_str((char*)__FILE__, FILE_NAME_LEN), __LINE__, ##__VA_ARGS__); }
-#define LOGV( format, ... )  if (log_level >= LOG_VERBOSE) { log_write(LOG_FORMAT(V, format), timestr(), log_cut_str((char*)__FUNCTION__, FUNC_NAME_LEN), log_cut_str((char*)__FILE__, FILE_NAME_LEN), __LINE__, ##__VA_ARGS__); }
+#define LOGE( format, ... )  if (log_level >= XLOG_ERROR)   { log_write(XLOG_FORMAT(E, format), timestr(), log_cut_str((char*)__FUNCTION__, FUNC_NAME_LEN), log_cut_str((char*)__FILE__, FILE_NAME_LEN), __LINE__, ##__VA_ARGS__); }
+#define LOGW( format, ... )  if (log_level >= XLOG_WARN)    { log_write(XLOG_FORMAT(W, format), timestr(), log_cut_str((char*)__FUNCTION__, FUNC_NAME_LEN), log_cut_str((char*)__FILE__, FILE_NAME_LEN), __LINE__, ##__VA_ARGS__); }
+#define LOGI( format, ... )  if (log_level >= XLOG_INFO)    { log_write(XLOG_FORMAT(I, format), timestr(), log_cut_str((char*)__FUNCTION__, FUNC_NAME_LEN), log_cut_str((char*)__FILE__, FILE_NAME_LEN), __LINE__, ##__VA_ARGS__); }
+#define LOGD( format, ... )  if (log_level >= XLOG_DEBUG)   { log_write(XLOG_FORMAT(D, format), timestr(), log_cut_str((char*)__FUNCTION__, FUNC_NAME_LEN), log_cut_str((char*)__FILE__, FILE_NAME_LEN), __LINE__, ##__VA_ARGS__); }
+#define LOGV( format, ... )  if (log_level >= XLOG_VERBOSE) { log_write(XLOG_FORMAT(V, format), timestr(), log_cut_str((char*)__FUNCTION__, FUNC_NAME_LEN), log_cut_str((char*)__FILE__, FILE_NAME_LEN), __LINE__, ##__VA_ARGS__); }
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __ANDROID__ */
-#ifndef ESP_PLATFORM
-void checkLogFile();
-#endif 
-#endif /* LOG_H__ */
+#endif /* XLOG_H__ */
