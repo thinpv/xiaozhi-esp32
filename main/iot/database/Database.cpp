@@ -3,8 +3,7 @@
 #include "Util.h"
 
 #ifdef ESP_PLATFORM
-// #define USE_LITTLEFS 1
-#ifdef USE_LITTLEFS
+#ifdef CONFIG_ENABLE_LITTLEFS
 #include "esp_littlefs.h"
 #else
 #include "esp_spiffs.h"
@@ -40,7 +39,7 @@ int Database::init(void)
 	LOGI("Init db");
 	int isCreateDb = false;
 #ifdef ESP_PLATFORM
-#ifdef USE_LITTLEFS
+#ifdef CONFIG_ENABLE_LITTLEFS
 	LOGI("Initializing LITTLEFS");
 	esp_vfs_littlefs_conf_t conf = {
 #else
@@ -49,15 +48,18 @@ int Database::init(void)
 #endif
 		.base_path = "/storage",
 		.partition_label = "storage",
+#ifndef CONFIG_ENABLE_LITTLEFS
+		.max_files = 5,
+#endif
 		.format_if_mount_failed = true,
-#ifdef USE_LITTLEFS
+#ifdef CONFIG_ENABLE_LITTLEFS
 		.dont_mount = false,
 #endif
 	};
 
 	// Use settings defined above to initialize and mount LITTLEFS filesystem.
 	// Note: esp_vfs_littlefs_register is an all-in-one convenience function.
-#ifdef USE_LITTLEFS
+#ifdef CONFIG_ENABLE_LITTLEFS
 	esp_err_t ret = esp_vfs_littlefs_register(&conf);
 #else
 	esp_err_t ret = esp_vfs_spiffs_register(&conf);
@@ -80,7 +82,7 @@ int Database::init(void)
 		return isCreateDb;
 	}
 
-#ifndef USE_LITTLEFS
+#ifndef CONFIG_ENABLE_LITTLEFS
 	LOGI("Performing SPIFFS_check().");
 	ret = esp_spiffs_check(conf.partition_label);
 	if (ret != ESP_OK)
@@ -95,7 +97,7 @@ int Database::init(void)
 #endif
 
 	size_t total = 0, used = 0;
-#ifdef USE_LITTLEFS
+#ifdef CONFIG_ENABLE_LITTLEFS
 	ret = esp_littlefs_info(conf.partition_label, &total, &used);
 #else
 	ret = esp_spiffs_info(conf.partition_label, &total, &used);
@@ -116,6 +118,7 @@ int Database::init(void)
 // LOGI("LITTLEFS unmounted");
 #endif
 
+	LOGI("DB_NAME: %s", DB_NAME);
 	if (!IsHaveDb(DB_NAME))
 	{
 		int rc = sqlite3_open_v2(DB_NAME, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, 0);

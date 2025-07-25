@@ -14,7 +14,6 @@
 #include <time.h>
 #include <unistd.h>
 #include <sqlite3.h>
-#include "esp_littlefs.h"
 #include <spi_flash_mmap.h>
 #include <esp_system.h>
 #include "esp_random.h"
@@ -22,6 +21,12 @@
 #include <sys/stat.h>
 
 #include "shox96_0_2.h"
+
+#ifdef CONFIG_ENABLE_LITTLEFS
+#include "esp_littlefs.h"
+#else
+#include "esp_spiffs.h"
+#endif
 
 #undef dbg_printf
 // #define dbg_printf(...) printf(__VA_ARGS__)

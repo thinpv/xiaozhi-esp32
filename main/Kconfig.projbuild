@@ -492,6 +492,12 @@ choice I2S_TYPE_TAIJIPI_S3
         bool "I2S Type PDM"
 endchoice
 
+config ENABLE_LITTLEFS
+    bool "Enable use Little FS"
+    default y
+    help
+        Enable use Little FS
+
 choice BOARD_TARGET
     prompt "Choose Modem Board"
     default BOARD_TARGET_IOTGW_V3
