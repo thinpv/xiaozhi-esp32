@@ -18,7 +18,15 @@ void iot_thread(void *arg)
 	Gateway::GetInstance()->init();
 	if (isCreateDb)
 	{
-		Gateway::GetInstance()->ResetFactory();
+#ifdef CONFIG_ENABLE_BLE
+		BleProtocol::GetInstance()->ResetDelAll();
+		BleProtocol::GetInstance()->ResetFactory();
+#endif
+
+#ifdef CONFIG_ENABLE_ZIGBEE
+		ZigbeeProtocol::GetInstance()->ResetFactory();
+		ZigbeeProtocol::GetInstance()->CommissionFormation();
+#endif
 	}
 	BleProtocol::GetInstance()->initKey(Gateway::GetInstance()->getBleNetKey(), Gateway::GetInstance()->getBleAppKey());
 	// vTaskDelete(NULL); // Delete the task after execution

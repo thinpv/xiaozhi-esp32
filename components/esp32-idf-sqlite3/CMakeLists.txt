@@ -4,7 +4,7 @@ idf_component_register(SRCS "sqlite3.c" "esp32.c" "shox96_0_2.c"
                        INCLUDE_DIRS "include"
                        PRIV_INCLUDE_DIRS "private_include"
                        REQUIRES mbedtls
-                       PRIV_REQUIRES console spi_flash spiffs esp_littlefs)
+                       PRIV_REQUIRES console spi_flash esp_littlefs)
 
 # if(CONFIG_ENABLE_LITTLEFS)
 # idf_component_register(SRCS "sqlite3.c" "esp32.c" "shox96_0_2.c"
