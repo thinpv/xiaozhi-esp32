@@ -105,26 +105,26 @@ void AudioService::Start() {
         vTaskDelete(NULL);
     }, "audio_input", 2048 * 3, this, 8, &audio_input_task_handle_, 1);
 #else
-    xTaskCreate([](void* arg) {
+    xTaskCreateWithCaps([](void* arg) {
         AudioService* audio_service = (AudioService*)arg;
         audio_service->AudioInputTask();
         vTaskDelete(NULL);
-    }, "audio_input", 2048 * 3, this, 8, &audio_input_task_handle_);
+    }, "audio_input", 2048 * 3, this, 8, &audio_input_task_handle_, MALLOC_CAP_SPIRAM);
 #endif
 
     /* Start the audio output task */
-    xTaskCreate([](void* arg) {
+    xTaskCreateWithCaps([](void* arg) {
         AudioService* audio_service = (AudioService*)arg;
         audio_service->AudioOutputTask();
         vTaskDelete(NULL);
-    }, "audio_output", 4096, this, 3, &audio_output_task_handle_);
+    }, "audio_output", 4096, this, 3, &audio_output_task_handle_, MALLOC_CAP_SPIRAM);
 
     /* Start the opus codec task */
-    xTaskCreate([](void* arg) {
+    xTaskCreateWithCaps([](void* arg) {
         AudioService* audio_service = (AudioService*)arg;
         audio_service->OpusCodecTask();
         vTaskDelete(NULL);
-    }, "opus_codec", 4096 * 7, this, 2, &opus_codec_task_handle_);
+    }, "opus_codec", 4096 * 7, this, 2, &opus_codec_task_handle_, MALLOC_CAP_SPIRAM);
 }
 
 void AudioService::Stop() {

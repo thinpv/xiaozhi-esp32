@@ -5,7 +5,6 @@
 #include "Log.h"
 #include "ErrorCode.h"
 #include "Led.h"
-#include "app_task.h"
 
 TimerSchedule *TimerSchedule::GetInstance()
 {
@@ -59,7 +58,7 @@ void TimerSchedule::init()
 	queue = xQueueCreate(10, sizeof(Timer *));
 	LOGI("Free memory: %d bytes, internal: %d bytes", esp_get_free_heap_size(), esp_get_free_internal_heap_size());
 
-	if (!app_new_task([](void *data)
+	if (!xTaskCreatePinnedToCoreWithCaps([](void *data)
 										{
 	LOGI("Start Timer Thread");
 	TimerSchedule *timerSchedule = (TimerSchedule *)data;
@@ -88,13 +87,15 @@ void TimerSchedule::init()
 										"TimerThread", // Task name
 										5120,					 // Stack size (words, not bytes)
 										this,					 // Param
-										5							 // Priority
-										))
+										5,						 // Priority
+										NULL,					 // Task handle
+										1,						 // Core 1 (APP_CPU)
+										MALLOC_CAP_SPIRAM))
 	{
 		LOGE("Failed to create TimerThread task");
 	}
 
-	if (!app_new_task([](void *data)
+	if (!xTaskCreatePinnedToCoreWithCaps([](void *data)
 										{
 	LOGI("TimerDoThread Start");
 	TimerSchedule *timerSchedule = (TimerSchedule *)data;
@@ -118,8 +119,10 @@ void TimerSchedule::init()
 										"TimerDoThread", // Task name
 										10240,					 // Stack size (words, not bytes)
 										this,						 // Param
-										5								 // Priority
-										))
+										5,							 // Priority
+										NULL,						 // Task handle
+										1,							 // Core 1 (APP_CPU)
+										MALLOC_CAP_SPIRAM))
 	{
 		LOGE("Failed to create TimerDoThread task");
 	}

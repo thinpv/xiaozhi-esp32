@@ -63,11 +63,11 @@ void AfeAudioProcessor::Initialize(AudioCodec* codec, int frame_duration_ms) {
     afe_iface_ = esp_afe_handle_from_config(afe_config);
     afe_data_ = afe_iface_->create_from_config(afe_config);
     
-    xTaskCreate([](void* arg) {
+    xTaskCreateWithCaps([](void* arg) {
         auto this_ = (AfeAudioProcessor*)arg;
         this_->AudioProcessorTask();
         vTaskDelete(NULL);
-    }, "audio_communication", 4096, this, 3, NULL);
+    }, "audio_communication", 4096, this, 3, NULL, MALLOC_CAP_SPIRAM);
 }
 
 AfeAudioProcessor::~AfeAudioProcessor() {

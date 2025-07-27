@@ -285,7 +285,6 @@ file(GLOB IOT_SOURCES
 	"${CMAKE_CURRENT_SOURCE_DIR}/iot/protocol/ble/*.c"
 	"${CMAKE_CURRENT_SOURCE_DIR}/iot/timer/*.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/iot/ota/*.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/iot/task/*.c"
 	"${CMAKE_CURRENT_SOURCE_DIR}/iot/led/*.cpp"
 )
 list(APPEND SOURCES ${IOT_SOURCES})
@@ -312,7 +311,6 @@ list(APPEND INCLUDE_DIRS
 	"${CMAKE_CURRENT_SOURCE_DIR}/iot/protocol/ble"
 	"${CMAKE_CURRENT_SOURCE_DIR}/iot/timer"
 	"${CMAKE_CURRENT_SOURCE_DIR}/iot/ota"
-	"${CMAKE_CURRENT_SOURCE_DIR}/iot/task"
 	"${CMAKE_CURRENT_SOURCE_DIR}/iot/led"
 )
 

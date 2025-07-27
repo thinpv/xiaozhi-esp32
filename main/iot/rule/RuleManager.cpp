@@ -16,10 +16,6 @@
 #include "Gateway.h"
 #include <Database.h>
 
-#ifdef ESP_PLATFORM
-#include "app_task.h"
-#endif
-
 RuleManager *RuleManager::GetInstance()
 {
 	static RuleManager *ruleManager = NULL;
@@ -34,17 +30,19 @@ RuleManager::RuleManager()
 {
 #ifdef ESP_PLATFORM
 	LOGI("Free memory: %d bytes, internal: %d bytes", esp_get_free_heap_size(), esp_get_free_internal_heap_size());
-	if (!app_new_task([](void *arg)
-							 {
+	if (!xTaskCreatePinnedToCoreWithCaps([](void *arg)
+																			 {
 		LOGI("checkRuleThread Start");
 		RuleManager *ruleManager = (RuleManager *)arg;
 		ruleManager->CheckRuleTask();
 		vTaskDelete(NULL); },								// Task function
-							 "checkRuleThread", // Task name
-							 20480,							// Stack size (words, not bytes)
-							 this,							// Param
-							 5									// Priority
-	))
+																			 "checkRuleThread", // Task name
+																			 20480,							// Stack size (words, not bytes)
+																			 this,							// Param
+																			 5,									// Priority
+																			 NULL,							// Task handle
+																			 1,									// Core 1 (APP_CPU)
+																			 MALLOC_CAP_SPIRAM))
 	{
 		LOGE("Failed to create checkRuleThread task");
 	}

@@ -70,11 +70,11 @@ bool AfeWakeWord::Initialize(AudioCodec* codec) {
     afe_iface_ = esp_afe_handle_from_config(afe_config);
     afe_data_ = afe_iface_->create_from_config(afe_config);
 
-    xTaskCreate([](void* arg) {
+    xTaskCreateWithCaps([](void* arg) {
         auto this_ = (AfeWakeWord*)arg;
         this_->AudioDetectionTask();
         vTaskDelete(NULL);
-    }, "audio_detection", 4096, this, 3, nullptr);
+    }, "audio_detection", 4096, this, 3, nullptr, MALLOC_CAP_SPIRAM);
 
     return true;
 }

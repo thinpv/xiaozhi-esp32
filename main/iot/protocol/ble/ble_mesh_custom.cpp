@@ -102,7 +102,7 @@ extern "C" void example_ble_mesh_custom_model_cb(esp_ble_mesh_model_cb_event_t e
 					scan_device_t *scan_device_ptr = (scan_device_t *)malloc(sizeof(scan_device_t));
 					memcpy(scan_device_ptr, &scan_device, sizeof(scan_device_t));
 					memset(&scan_device, 0, sizeof(scan_device));
-					if (xTaskCreate(AddDeviceThread, "AddDeviceThread", 10240, scan_device_ptr, 10, NULL) != pdPASS)
+					if (xTaskCreateWithCaps(AddDeviceThread, "AddDeviceThread", 10240, scan_device_ptr, 10, NULL, MALLOC_CAP_SPIRAM) != pdPASS)
 					{
 						LOGE("Failed to create task");
 					}

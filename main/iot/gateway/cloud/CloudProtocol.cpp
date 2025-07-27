@@ -7,10 +7,6 @@
 #include <thread>
 #include "Define.h"
 
-#ifdef ESP_PLATFORM
-#include "app_task.h"
-#endif
-
 #define OTA_CHUNK_SIZE 1024
 
 CloudProtocol::CloudProtocol(string address, int port, const char *clientId, string username, string password, int keepalive, bool ssl)
@@ -43,17 +39,19 @@ void CloudProtocol::init()
 
 #ifdef ESP_PLATFORM
 	LOGI("Free memory: %d bytes, internal: %d bytes", esp_get_free_heap_size(), esp_get_free_internal_heap_size());
-	if (!app_new_task([](void *arg)
-										{
+	if (!xTaskCreatePinnedToCoreWithCaps([](void *arg)
+																			 {
 	LOGI("pushTelemetryThread Start");
 	CloudProtocol *cloudProtocol = (CloudProtocol *)arg;
 	cloudProtocol->pushTelemetry();
-	vTaskDelete(NULL); },									 // Task function
-										"pushTelemetryThread", // Task name
-										20480,								 // Stack size (words, not bytes)
-										this,									 // Param
-										5											 // Priority
-										))
+	vTaskDelete(NULL); },										// Task function
+																			 "pushTelemetryThread", // Task name
+																			 20480,									// Stack size (words, not bytes)
+																			 this,									// Param
+																			 5,											// Priority
+																			 NULL,									// Task handle
+																			 1,											// Core 1 (APP_CPU)
+																			 MALLOC_CAP_SPIRAM))
 	{
 		LOGE("Failed to create pushTelemetryThread task");
 	}

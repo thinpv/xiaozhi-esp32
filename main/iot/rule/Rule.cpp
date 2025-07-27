@@ -6,7 +6,6 @@
 #include "Database.h"
 #ifdef ESP_PLATFORM
 // #include "Sntp.h"
-#include "app_task.h"
 #endif
 
 Rule::Rule(string id,
@@ -158,15 +157,17 @@ void Rule::Do()
 {
 
 #ifdef ESP_PLATFORM
-	if (!app_new_task([](void *arg)
-							 {
+	if (!xTaskCreatePinnedToCoreWithCaps([](void *arg)
+										{
 	Rule *rule = (Rule *)arg;
-	rule->RunOutput(); },			 // Task function
-							 "ruleDo", // Task name
-							 5120,		 // Stack size (words, not bytes)
-							 this,		 // Param
-							 5				 // Priority
-	))
+	rule->RunOutput(); },			// Task function
+										"ruleDo", // Task name
+										5120,			// Stack size (words, not bytes)
+										this,			// Param
+										5,				// Priority
+										NULL,			// Task handle
+										1,				// Core 1 (APP_CPU)
+										MALLOC_CAP_SPIRAM))
 	{
 		LOGE("Failed to create ruleDo task");
 	}
