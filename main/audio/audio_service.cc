@@ -97,34 +97,42 @@ void AudioService::Start() {
 
     esp_timer_start_periodic(audio_power_timer_, 1000000);
 
-    /* Start the audio input task */
 #if CONFIG_USE_AUDIO_PROCESSOR
+    /* Start the audio input task */
     xTaskCreatePinnedToCore([](void* arg) {
         AudioService* audio_service = (AudioService*)arg;
         audio_service->AudioInputTask();
         vTaskDelete(NULL);
     }, "audio_input", 2048 * 3, this, 8, &audio_input_task_handle_, 1);
-#else
-    xTaskCreateWithCaps([](void* arg) {
-        AudioService* audio_service = (AudioService*)arg;
-        audio_service->AudioInputTask();
-        vTaskDelete(NULL);
-    }, "audio_input", 2048 * 3, this, 8, &audio_input_task_handle_, MALLOC_CAP_SPIRAM);
-#endif
 
     /* Start the audio output task */
     xTaskCreateWithCaps([](void* arg) {
         AudioService* audio_service = (AudioService*)arg;
         audio_service->AudioOutputTask();
         vTaskDelete(NULL);
-    }, "audio_output", 4096, this, 3, &audio_output_task_handle_, MALLOC_CAP_SPIRAM);
+    }, "audio_output", 2048 * 2, this, 3, &audio_output_task_handle_, MALLOC_CAP_SPIRAM);
+#else
+    /* Start the audio input task */
+    xTaskCreateWithCaps([](void* arg) {
+        AudioService* audio_service = (AudioService*)arg;
+        audio_service->AudioInputTask();
+        vTaskDelete(NULL);
+    }, "audio_input", 2048 * 2, this, 8, &audio_input_task_handle_, MALLOC_CAP_SPIRAM);
+
+    /* Start the audio output task */
+    xTaskCreateWithCaps([](void* arg) {
+        AudioService* audio_service = (AudioService*)arg;
+        audio_service->AudioOutputTask();
+        vTaskDelete(NULL);
+    }, "audio_output", 2048, this, 3, &audio_output_task_handle_, MALLOC_CAP_SPIRAM);
+#endif
 
     /* Start the opus codec task */
     xTaskCreateWithCaps([](void* arg) {
         AudioService* audio_service = (AudioService*)arg;
         audio_service->OpusCodecTask();
         vTaskDelete(NULL);
-    }, "opus_codec", 4096 * 7, this, 2, &opus_codec_task_handle_, MALLOC_CAP_SPIRAM);
+    }, "opus_codec", 2048 * 13, this, 2, &opus_codec_task_handle_, MALLOC_CAP_SPIRAM);
 }
 
 void AudioService::Stop() {
