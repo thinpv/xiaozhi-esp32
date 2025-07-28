@@ -308,30 +308,86 @@ void app_ble_mesh_provi_init_key(uint16_t net_idx, uint8_t *net_key, uint16_t ap
 		}
 	}
 
-	LOGI("Add App Key %s", bt_hex(app_key, ESP_BLE_MESH_OCTET16_LEN));
-	err = esp_ble_mesh_provisioner_add_local_app_key(app_key, net_idx, app_idx);
-	if (err != ESP_OK)
-	{
-		LOGE("Failed to add local AppKey: %s", esp_err_to_name(err));
-	}
+	// LOGI("Add App Key %s", bt_hex(app_key, ESP_BLE_MESH_OCTET16_LEN));
+	// err = esp_ble_mesh_provisioner_add_local_app_key(app_key, net_idx, app_idx);
+	// if (err != ESP_OK)
+	// {
+	// 	LOGE("Failed to add local AppKey: %s", esp_err_to_name(err));
+	// }
 
-	// const uint8_t *app_key_tem = esp_ble_mesh_provisioner_get_local_app_key(net_idx, app_idx);
-	// if (app_key_tem)
-	// {
-	// 	LOGI("Update App Key %s", bt_hex(app_key, ESP_BLE_MESH_OCTET16_LEN));
-	// 	err = esp_ble_mesh_provisioner_update_local_app_key(app_key, net_idx, app_idx);
-	// 	if (err != ESP_OK)
-	// 	{
-	// 		LOGE("Failed to update local AppKey: %s", esp_err_to_name(err));
-	// 	}
-	// }
-	// else
-	// {
-	// 	LOGI("Add App Key %s", bt_hex(app_key, ESP_BLE_MESH_OCTET16_LEN));
-	// 	err = esp_ble_mesh_provisioner_add_local_app_key(app_key, net_idx, app_idx);
-	// 	if (err != ESP_OK)
-	// 	{
-	// 		LOGE("Failed to add local AppKey: %s", esp_err_to_name(err));
-	// 	}
-	// }
+	const uint8_t *app_key_tem = esp_ble_mesh_provisioner_get_local_app_key(net_idx, app_idx);
+	if (app_key_tem)
+	{
+		bool isUpdate = false;
+		for (int i = 0; i < ESP_BLE_MESH_OCTET16_LEN; i++)
+		{
+			if (app_key[i] != app_key_tem[i])
+			{
+				LOGI("Update App Key %s to %s", bt_hex(app_key_tem, ESP_BLE_MESH_OCTET16_LEN), bt_hex(app_key, ESP_BLE_MESH_OCTET16_LEN));
+				isUpdate = true;
+				err = esp_ble_mesh_provisioner_update_local_app_key(app_key, net_idx, app_idx);
+				if (err != ESP_OK)
+				{
+					LOGE("Failed to update local AppKey: %s", esp_err_to_name(err));
+				}
+				break;
+			}
+		}
+
+		if (!isUpdate)
+		{
+			LOGI("App Key not changed, skip update");
+			esp_ble_mesh_provisioner_bind_app_key_to_local_model(
+					PROV_OWN_ADDR, app_idx,
+					ESP_BLE_MESH_MODEL_ID_GEN_ONOFF_CLI,
+					ESP_BLE_MESH_CID_NVAL);
+			esp_ble_mesh_provisioner_bind_app_key_to_local_model(
+					PROV_OWN_ADDR, app_idx,
+					ESP_BLE_MESH_MODEL_ID_LIGHT_CTL_CLI,
+					ESP_BLE_MESH_CID_NVAL);
+			esp_ble_mesh_provisioner_bind_app_key_to_local_model(
+					PROV_OWN_ADDR, app_idx,
+					ESP_BLE_MESH_MODEL_ID_LIGHT_HSL_CLI,
+					ESP_BLE_MESH_CID_NVAL);
+			esp_ble_mesh_provisioner_bind_app_key_to_local_model(
+					PROV_OWN_ADDR, app_idx,
+					ESP_BLE_MESH_MODEL_ID_LIGHT_LIGHTNESS_CLI,
+					ESP_BLE_MESH_CID_NVAL);
+			esp_ble_mesh_provisioner_bind_app_key_to_local_model(
+					PROV_OWN_ADDR, app_idx,
+					ESP_BLE_MESH_MODEL_ID_SCHEDULER_CLI,
+					ESP_BLE_MESH_CID_NVAL);
+			esp_ble_mesh_provisioner_bind_app_key_to_local_model(
+					PROV_OWN_ADDR, app_idx,
+					ESP_BLE_MESH_MODEL_ID_SCENE_CLI,
+					ESP_BLE_MESH_CID_NVAL);
+			esp_ble_mesh_provisioner_bind_app_key_to_local_model(
+					PROV_OWN_ADDR, app_idx,
+					ESP_BLE_MESH_MODEL_ID_TIME_CLI,
+					ESP_BLE_MESH_CID_NVAL);
+			// Sensor
+			esp_ble_mesh_provisioner_bind_app_key_to_local_model(
+					PROV_OWN_ADDR, app_idx,
+					ESP_BLE_MESH_MODEL_ID_SENSOR_CLI,
+					ESP_BLE_MESH_CID_NVAL);
+			// Battery
+			esp_ble_mesh_provisioner_bind_app_key_to_local_model(
+					PROV_OWN_ADDR, app_idx,
+					ESP_BLE_MESH_MODEL_ID_GEN_BATTERY_CLI,
+					ESP_BLE_MESH_CID_NVAL);
+			esp_ble_mesh_provisioner_bind_app_key_to_local_model(
+					PROV_OWN_ADDR, app_idx,
+					ESP_BLE_MESH_VND_MODEL_ID_CLIENT,
+					RD_VENDOR_ID);
+		}
+	}
+	else
+	{
+		LOGI("Add App Key %s", bt_hex(app_key, ESP_BLE_MESH_OCTET16_LEN));
+		err = esp_ble_mesh_provisioner_add_local_app_key(app_key, net_idx, app_idx);
+		if (err != ESP_OK)
+		{
+			LOGE("Failed to add local AppKey: %s", esp_err_to_name(err));
+		}
+	}
 }
