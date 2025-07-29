@@ -103,6 +103,17 @@ void McpServer::AddCommonTools() {
             });
     }
 
+    AddTool("self.iot.control", "Điều khiển thiết bị, đèn, phòng, nhóm. Bao gồm thao tác bật, tắt, đổi độ sáng. Bật có giá trị 1, tắt có giá trị 0, độ sáng từ 0% đến 100% tương đương giá trị 0 đến 100. Giá trị trả về bao gồm id và value. Các phòng bao gồm: 'phòng khách' có id là '112288d29fcb22', 'phòng ngủ' có id là '112288d29fcb23', 'phòng ngủ nhỏ' có id là '112288d29fcb24', 'phòng bếp' có id là '112288d29fcb25', 'phòng vệ sinh' có id là '112288d29fcb26'. Thiết bị bao gồm: 'công tắc đèn trần' có id là '55aa88d29fcb00', 'công tắc nhà vệ sinh' có id là '55aa88d29fcb01'. Nhóm bao gồm: 'đèn trần' có id là '55ab88d29fcb00', 'đèn bếp' có id là '55ab88d29fcb01', 'đèn phòng ngủ' có id là '55ab88d29fcb02'", 
+        PropertyList({
+            Property("id", kPropertyTypeString),
+            Property("value", kPropertyTypeInteger, 0, 100)
+        }),
+        [this](const PropertyList& properties) -> ReturnValue {
+            // uint8_t value = static_cast<uint8_t>(properties["value"].value<int>());
+            ESP_LOGW(TAG, "Điều khiển id %s value %d", properties["id"].value<std::string>().c_str(), properties["value"].value<int>());
+            return true;
+        });
+
     // Restore the original tools list to the end of the tools list
     tools_.insert(tools_.end(), original_tools.begin(), original_tools.end());
 }
@@ -347,21 +358,60 @@ void McpServer::DoToolCall(int id, const std::string& tool_name, const cJSON* to
         return;
     }
 
-    // Start a task to receive data with stack size
-    esp_pthread_cfg_t cfg = esp_pthread_get_default_config();
-    cfg.thread_name = "tool_call";
-    cfg.stack_size = stack_size;
-    cfg.prio = 1;
-    esp_pthread_set_cfg(&cfg);
+    // // Start a task to receive data with stack size
+    // esp_pthread_cfg_t cfg = esp_pthread_get_default_config();
+    // cfg.thread_name = "tool_call";
+    // cfg.stack_size = stack_size;
+    // cfg.prio = 1;
+    // esp_pthread_set_cfg(&cfg);
 
-    // Use a thread to call the tool to avoid blocking the main thread
-    tool_call_thread_ = std::thread([this, id, tool_iter, arguments = std::move(arguments)]() {
-        try {
-            ReplyResult(id, (*tool_iter)->Call(arguments));
-        } catch (const std::exception& e) {
-            ESP_LOGE(TAG, "tools/call: %s", e.what());
-            ReplyError(id, e.what());
-        }
-    });
-    tool_call_thread_.detach();
+    // // Use a thread to call the tool to avoid blocking the main thread
+    // tool_call_thread_ = std::thread([this, id, tool_iter, arguments = std::move(arguments)]() {
+    //     try {
+    //         ReplyResult(id, (*tool_iter)->Call(arguments));
+    //     } catch (const std::exception& e) {
+    //         ESP_LOGE(TAG, "tools/call: %s", e.what());
+    //         ReplyError(id, e.what());
+    //     }
+    // });
+    // tool_call_thread_.detach();
+
+    struct ToolCallParams {
+        McpServer *instance;
+        int id;
+        std::vector<McpTool *>::iterator tool_iter;
+        PropertyList arguments;
+    };
+
+    ToolCallParams *params = new ToolCallParams{
+        this,
+        id,
+        tool_iter,
+        std::move(arguments)
+    };
+
+    BaseType_t ret = xTaskCreateWithCaps([](void* arg) {
+            auto *params = static_cast<ToolCallParams*>(arg);
+            try {
+                params->instance->ReplyResult(params->id,
+                    (*params->tool_iter)->Call(params->arguments));
+            } catch (const std::exception &e) {
+                ESP_LOGE("TOOL", "tools/call: %s", e.what());
+                params->instance->ReplyError(params->id, e.what());
+            }
+            delete params;
+            vTaskDelete(NULL);
+        },
+        "tool_call",            // tên task
+        stack_size,             // stack depth (word)
+        params,                 // tham số
+        3,                      // priority
+        NULL,                   // không cần TaskHandle_t
+        MALLOC_CAP_SPIRAM       // cấp phát stack từ PSRAM
+    );
+
+    if (ret != pdPASS) {
+        ESP_LOGE(TAG, "Failed to create tool_call task");
+        delete params;
+    }
 }
