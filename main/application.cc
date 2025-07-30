@@ -354,6 +354,9 @@ void Application::Start() {
     /* Wait for the network to be ready */
     board.StartNetwork();
 
+    extern void iot_thread(void *arg);
+    iot_thread(NULL);
+
     // Update the status bar immediately to show the network state
     display->UpdateStatusBar(true);
 
