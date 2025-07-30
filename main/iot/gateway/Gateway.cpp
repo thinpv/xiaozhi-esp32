@@ -218,7 +218,7 @@ void Gateway::OnConnect(int rc)
 {
 	CloudProtocol::OnConnect(rc);
 
-	LOGI("OnConnect: %d", isConnected);
+	LOGI("OnConnect: %d", IsConnected());
 	Util::LedInternet(true);
 	Json::Value macAttribute;
 	macAttribute["mac"] = mac;
@@ -230,7 +230,7 @@ void Gateway::OnDisconnect(int rc)
 {
 	CloudProtocol::OnDisconnect(rc);
 
-	LOGI("OnDisconnect: %d", isConnected);
+	LOGI("OnDisconnect: %d", IsConnected());
 	Util::LedInternet(false);
 }
 
