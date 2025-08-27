@@ -6,6 +6,21 @@
 #include "esp_netif.h"
 #include "system_info.h"
 
+#include "esp_heap_caps.h"
+
+void *operator new(size_t size)
+{
+	void *ptr = heap_caps_malloc(size, MALLOC_CAP_SPIRAM);
+	if (!ptr)
+		throw std::bad_alloc();
+	return ptr;
+}
+
+void operator delete(void *ptr) noexcept
+{
+	heap_caps_free(ptr);
+}
+
 void iot_thread(void *arg)
 {
     // vTaskDelay(10000 / portTICK_PERIOD_MS);
