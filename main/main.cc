@@ -32,5 +32,7 @@ extern "C" void app_main(void)
     // iot_main();
 
     // Launch the application
-    Application::GetInstance().Start();
+    auto& app = Application::GetInstance();
+    app.Start();
+    app.MainEventLoop();
 }
